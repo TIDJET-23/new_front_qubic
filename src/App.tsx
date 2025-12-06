@@ -667,6 +667,148 @@ function App() {
     )
   }
 
+  const renderShadowWallets = (data: any) => {
+    if (!data) return null
+
+    const getRiskColor = (level: string) => {
+      switch (level) {
+        case 'CRITICAL': return 'text-red-700 bg-red-100'
+        case 'HIGH': return 'text-red-600 bg-red-100'
+        case 'MEDIUM': return 'text-yellow-600 bg-yellow-100'
+        case 'LOW': return 'text-green-600 bg-green-100'
+        default: return 'text-gray-600 bg-gray-100'
+      }
+    }
+
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Shadow Wallet Detector</h2>
+            <span className={`px-4 py-2 rounded-full font-bold ${getRiskColor(data.network_threat_level)}`}>
+              {data.network_threat_level}
+            </span>
+          </div>
+          <p className="text-gray-700 text-lg">{data.prediction}</p>
+          <p className="text-gray-600 mt-2">Confidence: {(data.confidence * 100).toFixed(0)}%</p>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm text-gray-500 mb-1">Total Suspicious</div>
+            <div className="text-3xl font-bold text-red-600">{data.total_suspicious_wallets}</div>
+            <div className="text-sm text-gray-600">Wallets detected</div>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm text-gray-500 mb-1">New 24h</div>
+            <div className="text-3xl font-bold text-orange-600">{data.new_wallets_detected_24h}</div>
+            <div className="text-sm text-gray-600">Recently created</div>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm text-gray-500 mb-1">High Risk</div>
+            <div className="text-3xl font-bold text-red-700">{data.high_risk_wallets}</div>
+            <div className="text-sm text-gray-600">Critical wallets</div>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm text-gray-500 mb-1">Avg Risk Score</div>
+            <div className="text-3xl font-bold text-yellow-600">{data.avg_risk_score.toFixed(1)}</div>
+            <div className="text-sm text-gray-600">Out of 100</div>
+          </div>
+        </div>
+
+        {/* Suspicious Wallets */}
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <h3 className="text-xl font-bold mb-4">Suspicious Wallets</h3>
+          <div className="space-y-4">
+            {data.suspicious_wallets?.map((wallet: any, idx: number) => (
+              <div key={idx} className="border-l-4 border-red-600 bg-red-50 p-4 rounded">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h4 className="font-bold text-lg">{wallet.wallet_id}</h4>
+                    <p className="text-sm text-gray-600">Type: {wallet.threat_type}</p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full font-bold ${getRiskColor(wallet.risk_level)}`}>
+                    {wallet.risk_score}
+                  </span>
+                </div>
+                <ul className="text-sm space-y-1 mb-2">
+                  {wallet.indicators?.map((ind: string, i: number) => (
+                    <li key={i} className="text-gray-700">• {ind}</li>
+                  ))}
+                </ul>
+                <div className="mt-2 px-3 py-1 bg-gray-800 text-white rounded inline-block text-sm">
+                  Action: {wallet.recommended_action}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Alerts */}
+        {data.alerts && (
+          <div className="bg-red-50 border-l-4 border-red-600 p-6 rounded-lg">
+            <h3 className="text-lg font-bold text-red-800 mb-3">Alertes</h3>
+            <ul className="space-y-2">
+              {data.alerts.map((alert: string, idx: number) => (
+                <li key={idx} className="text-red-700">{alert}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Charts */}
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-bold mb-4">Risk Distribution</h3>
+            <div className="h-80">
+              <Doughnut
+                data={{
+                  labels: ['High Risk', 'Medium Risk'],
+                  datasets: [{
+                    data: [data.high_risk_wallets, data.medium_risk_wallets],
+                    backgroundColor: ['#dc2626', '#f59e0b']
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: { legend: { position: 'bottom' } }
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-bold mb-4">Suspicious Wallets Detection (24h)</h3>
+            <div className="h-80">
+              <Line
+                data={{
+                  labels: data.history_24h?.map((h: any) => `${h.hour}h`) || [],
+                  datasets: [{
+                    label: 'Total Suspicious',
+                    data: data.history_24h?.map((h: any) => h.total_suspicious) || [],
+                    borderColor: '#dc2626',
+                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: { y: { beginAtZero: true } }
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const renderAgentContent = () => {
     const agentData = getAgentData()
 
@@ -690,6 +832,218 @@ function App() {
     // Agent 2: Whale Behavior
     if (activeButton === 2) {
       return renderWhaleBehavior(agentData.data)
+    }
+
+    // Agent 3: Shadow Wallets
+    if (activeButton === 3) {
+      return renderShadowWallets(agentData.data)
+    }
+
+    // Agent 4: Multiverse
+    if (activeButton === 4) {
+      return (
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h2 className="text-2xl font-bold mb-4">Smart Contract Multiverse Simulator</h2>
+            <p className="text-gray-700">{agentData.data.prediction}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="text-sm text-gray-500 mb-1">Scenarios Explored</div>
+              <div className="text-3xl font-bold">{agentData.data.total_scenarios_explored}</div>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="text-sm text-gray-500 mb-1">Dangerous States</div>
+              <div className="text-3xl font-bold text-red-600">{agentData.data.dangerous_states_found}</div>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="text-sm text-gray-500 mb-1">Safe States</div>
+              <div className="text-3xl font-bold text-green-600">{agentData.data.safe_states}</div>
+            </div>
+          </div>
+
+          {agentData.data.dangerous_scenarios?.map((scenario: any, idx: number) => (
+            <div key={idx} className="bg-red-50 border-l-4 border-red-600 p-6 rounded-lg">
+              <h3 className="font-bold text-lg mb-2">{scenario.scenario_id} - Risk: {scenario.risk_score}</h3>
+              <p className="text-sm mb-2"><strong>Trigger:</strong> {scenario.trigger_condition}</p>
+              <p className="text-sm mb-2"><strong>Outcome:</strong> {scenario.outcome}</p>
+              <p className="text-sm text-green-700"><strong>Fix:</strong> {scenario.recommended_fix}</p>
+            </div>
+          ))}
+
+          {agentData.data.alerts && (
+            <div className="bg-red-50 border-l-4 border-red-600 p-6 rounded-lg">
+              <h3 className="text-lg font-bold text-red-800 mb-3">Alertes</h3>
+              <ul className="space-y-2">
+                {agentData.data.alerts.map((alert: string, idx: number) => (
+                  <li key={idx} className="text-red-700">{alert}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    // Agent 5: Governance
+    if (activeButton === 5) {
+      return (
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h2 className="text-2xl font-bold mb-4">Governance Sentiment Predictor</h2>
+            <h3 className="text-xl font-semibold mb-2">{agentData.data.event_name}</h3>
+            <p className="text-gray-700 mb-2">{agentData.data.prediction}</p>
+            <div className="flex gap-4 mt-4">
+              <span className={`px-4 py-2 rounded-full font-bold ${
+                agentData.data.predicted_outcome === 'APPROVE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+              }`}>
+                {agentData.data.predicted_outcome} ({(agentData.data.confidence * 100).toFixed(0)}%)
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="text-sm text-gray-500 mb-1">Whales Tracked</div>
+              <div className="text-3xl font-bold">{agentData.data.influential_wallets_tracked}</div>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="text-sm text-gray-500 mb-1">Accumulating</div>
+              <div className="text-3xl font-bold text-green-600">{agentData.data.wallets_accumulating_tokens}</div>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="text-sm text-gray-500 mb-1">Distributing</div>
+              <div className="text-3xl font-bold text-red-600">{agentData.data.wallets_distributing_tokens}</div>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="text-sm text-gray-500 mb-1">Tokens Accumulated (7d)</div>
+              <div className="text-3xl font-bold text-blue-600">{(agentData.data.token_accumulation_7d / 1000000).toFixed(0)}M</div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-bold mb-4">Voting Power Distribution</h3>
+            <div className="h-80">
+              <Doughnut
+                data={{
+                  labels: ['Approve', 'Reject', 'Uncertain'],
+                  datasets: [{
+                    data: [
+                      agentData.data.voting_power_likely_approve,
+                      agentData.data.voting_power_likely_reject,
+                      agentData.data.voting_power_uncertain
+                    ],
+                    backgroundColor: ['#00ff88', '#ff4444', '#8b92b0']
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: { legend: { position: 'bottom' } }
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-bold mb-4">Token Accumulation (7 days)</h3>
+            <div className="h-80">
+              <Line
+                data={{
+                  labels: agentData.data.history_7d?.map((h: any) => `Day ${h.day}`) || [],
+                  datasets: [{
+                    label: 'Tokens Accumulated (M)',
+                    data: agentData.data.history_7d?.map((h: any) => h.tokens_accumulated / 1000000) || [],
+                    borderColor: '#00d4ff',
+                    backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // Agent 6: Futures Impact
+    if (activeButton === 6) {
+      return (
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h2 className="text-2xl font-bold mb-4">Futures Impact Analyzer</h2>
+            <p className="text-gray-700 text-lg mb-2">{agentData.data.prediction}</p>
+            <div className="flex gap-4 mt-4">
+              <span className="px-4 py-2 rounded-full font-bold bg-red-100 text-red-700">
+                Impact: {agentData.data.price_impact_pct}%
+              </span>
+              <span className="px-4 py-2 rounded-full font-bold bg-yellow-100 text-yellow-700">
+                Confidence: {(agentData.data.confidence * 100).toFixed(0)}%
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="text-sm text-gray-500 mb-1">Transaction Type</div>
+              <div className="text-2xl font-bold capitalize">{agentData.data.transaction_type.replace('_', ' ')}</div>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="text-sm text-gray-500 mb-1">Volume</div>
+              <div className="text-3xl font-bold">{(agentData.data.hypothetical_volume / 1000000).toFixed(1)}M</div>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="text-sm text-gray-500 mb-1">Price Impact</div>
+              <div className="text-3xl font-bold text-red-600">{agentData.data.price_impact_pct}%</div>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow">
+              <div className="text-sm text-gray-500 mb-1">Network Reaction</div>
+              <div className="text-xl font-bold text-red-600 capitalize">{agentData.data.network_reaction.replace('_', ' ')}</div>
+            </div>
+          </div>
+
+          {agentData.data.predicted_chain_reaction && (
+            <div className="bg-white p-6 rounded-lg shadow-lg">
+              <h3 className="text-xl font-bold mb-4">Predicted Chain Reaction</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="border p-4 rounded">
+                  <h4 className="font-bold mb-2">Phase 1: Immediate</h4>
+                  <p className="text-sm text-gray-600">{agentData.data.predicted_chain_reaction.phase_1_immediate.time}</p>
+                  <p className="text-lg font-bold text-red-600">{agentData.data.predicted_chain_reaction.phase_1_immediate.price_drop_pct}%</p>
+                </div>
+                <div className="border p-4 rounded">
+                  <h4 className="font-bold mb-2">Phase 2: Cascade</h4>
+                  <p className="text-sm text-gray-600">{agentData.data.predicted_chain_reaction.phase_2_cascade.time}</p>
+                  <p className="text-lg font-bold text-red-600">{agentData.data.predicted_chain_reaction.phase_2_cascade.total_price_drop_pct}%</p>
+                </div>
+                <div className="border p-4 rounded">
+                  <h4 className="font-bold mb-2">Phase 3: Stabilization</h4>
+                  <p className="text-sm text-gray-600">{agentData.data.predicted_chain_reaction.phase_3_stabilization.time}</p>
+                  <p className="text-lg font-bold text-red-600">{agentData.data.predicted_chain_reaction.phase_3_stabilization.total_price_drop_pct}%</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {agentData.data.alerts && (
+            <div className="bg-red-50 border-l-4 border-red-600 p-6 rounded-lg">
+              <h3 className="text-lg font-bold text-red-800 mb-3">Alertes</h3>
+              <ul className="space-y-2">
+                {agentData.data.alerts.map((alert: string, idx: number) => (
+                  <li key={idx} className="text-red-700">{alert}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )
     }
 
     // Pour les autres agents, afficher temporairement le JSON
