@@ -375,6 +375,298 @@ function App() {
     )
   }
 
+  const renderWhaleBehavior = (data: any) => {
+    if (!data) return null
+
+    const getRiskColor = (level: string) => {
+      switch (level) {
+        case 'HIGH': return 'text-red-600 bg-red-100'
+        case 'MEDIUM': return 'text-yellow-600 bg-yellow-100'
+        case 'LOW': return 'text-green-600 bg-green-100'
+        default: return 'text-gray-600 bg-gray-100'
+      }
+    }
+
+    const getSentimentColor = (sentiment: string) => {
+      switch (sentiment) {
+        case 'bearish': return 'text-red-600 bg-red-100'
+        case 'bullish': return 'text-green-600 bg-green-100'
+        case 'neutral': return 'text-gray-600 bg-gray-100'
+        default: return 'text-gray-600 bg-gray-100'
+      }
+    }
+
+    return (
+      <div className="space-y-6">
+        {/* Header Card */}
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Whale Behavior Predictor</h2>
+            <div className="flex gap-3">
+              <span className={`px-4 py-2 rounded-full font-bold capitalize ${getSentimentColor(data.overall_sentiment)}`}>
+                {data.overall_sentiment}
+              </span>
+              <span className={`px-4 py-2 rounded-full font-bold ${getRiskColor(data.risk_level)}`}>
+                {data.risk_level}
+              </span>
+            </div>
+          </div>
+          <p className="text-gray-700 text-lg">{data.prediction}</p>
+          <p className="text-gray-600 mt-2">Confidence: {(data.confidence * 100).toFixed(0)}%</p>
+        </div>
+
+        {/* Stats Grid - Row 1 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm text-gray-500 mb-1">Whales Tracked</div>
+            <div className="text-3xl font-bold">{data.whales_tracked}</div>
+            <div className="text-sm text-gray-600">Total monitored</div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm text-gray-500 mb-1">Risk Score</div>
+            <div className={`text-3xl font-bold ${data.risk_score > 70 ? 'text-red-600' : data.risk_score > 40 ? 'text-yellow-600' : 'text-green-600'}`}>
+              {data.risk_score.toFixed(1)}/100
+            </div>
+            <div className="text-sm text-gray-600">Danger level</div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm text-gray-500 mb-1">Total Whale Balance</div>
+            <div className="text-3xl font-bold">{(data.total_whale_balance / 1000000).toFixed(0)}M</div>
+            <div className="text-sm text-gray-600">QUBIC</div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm text-gray-500 mb-1">Balance Change 24h</div>
+            <div className={`text-3xl font-bold ${data.balance_change_24h_pct < 0 ? 'text-red-600' : 'text-green-600'}`}>
+              {data.balance_change_24h_pct.toFixed(1)}%
+            </div>
+            <div className="text-sm text-gray-600">Overall trend</div>
+          </div>
+        </div>
+
+        {/* Stats Grid - Row 2 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm text-gray-500 mb-1">Whales Accumulating</div>
+            <div className="text-3xl font-bold text-green-600">{data.whales_accumulating}</div>
+            <div className="text-sm text-gray-600">{((data.whales_accumulating / data.whales_tracked) * 100).toFixed(0)}%</div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm text-gray-500 mb-1">Whales Distributing</div>
+            <div className="text-3xl font-bold text-red-600">{data.whales_distributing}</div>
+            <div className="text-sm text-gray-600">{((data.whales_distributing / data.whales_tracked) * 100).toFixed(0)}%</div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm text-gray-500 mb-1">Whales Idle</div>
+            <div className="text-3xl font-bold text-gray-600">{data.whales_idle}</div>
+            <div className="text-sm text-gray-600">{((data.whales_idle / data.whales_tracked) * 100).toFixed(0)}%</div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm text-gray-500 mb-1">Whale Activity Index</div>
+            <div className="text-3xl font-bold text-blue-600">{data.whale_activity_index.toFixed(1)}</div>
+            <div className="text-sm text-gray-600">Activity level</div>
+          </div>
+        </div>
+
+        {/* Stats Grid - Row 3 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm text-gray-500 mb-1">Avg Transaction Size</div>
+            <div className="text-3xl font-bold text-purple-600">{(data.avg_transaction_size / 1000000).toFixed(1)}M</div>
+            <div className="text-sm text-gray-600">QUBIC per tx</div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm text-gray-500 mb-1">Connected Wallets</div>
+            <div className="text-3xl font-bold text-orange-600">{data.connected_wallets_detected}</div>
+            <div className="text-sm text-gray-600">Detected links</div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm text-gray-500 mb-1">Suspicious Transfers</div>
+            <div className="text-3xl font-bold text-red-600">{data.suspicious_transfers}</div>
+            <div className="text-sm text-gray-600">Flagged transactions</div>
+          </div>
+        </div>
+
+        {/* Whale Patterns */}
+        {data.patterns_detected && data.patterns_detected.length > 0 && (
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-bold mb-4">Patterns Détectés</h3>
+            <div className="space-y-4">
+              {data.patterns_detected.map((pattern: any, idx: number) => (
+                <div key={idx} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h4 className="font-bold text-lg">{pattern.whale_id}</h4>
+                      <p className="text-sm text-gray-600">Pattern: {pattern.current_pattern}</p>
+                      <p className="text-sm text-gray-600">Stage: <span className="font-semibold">{pattern.pattern_stage}</span></p>
+                    </div>
+                    {pattern.historical_accuracy && (
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+                        {(pattern.historical_accuracy * 100).toFixed(0)}% accuracy
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div className="bg-red-50 p-3 rounded">
+                      <div className="text-xs text-gray-600">Sell</div>
+                      <div className="text-lg font-bold text-red-600">{(pattern.probability_next_action.sell * 100).toFixed(0)}%</div>
+                    </div>
+                    <div className="bg-green-50 p-3 rounded">
+                      <div className="text-xs text-gray-600">Accumulate</div>
+                      <div className="text-lg font-bold text-green-600">{(pattern.probability_next_action.accumulate * 100).toFixed(0)}%</div>
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded">
+                      <div className="text-xs text-gray-600">Hold</div>
+                      <div className="text-lg font-bold text-gray-600">{(pattern.probability_next_action.hold * 100).toFixed(0)}%</div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-700">
+                    <span className="font-semibold">Time to action:</span> {pattern.estimated_time_to_action}
+                  </p>
+                  {pattern.potential_sell_volume && (
+                    <p className="text-sm text-red-700 mt-1">
+                      <span className="font-semibold">Potential sell volume:</span> {(pattern.potential_sell_volume / 1000000).toFixed(1)}M QUBIC
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Alerts */}
+        {data.alerts && data.alerts.length > 0 && (
+          <div className="bg-red-50 border-l-4 border-red-600 p-6 rounded-lg">
+            <h3 className="text-lg font-bold text-red-800 mb-3">Alertes</h3>
+            <ul className="space-y-2">
+              {data.alerts.map((alert: string, idx: number) => (
+                <li key={idx} className="text-red-700 flex items-start">
+                  <span className="mr-2">⚠️</span>
+                  <span>{alert}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Charts Section */}
+        <div className="space-y-6">
+          {/* Whale Distribution Doughnut */}
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-bold mb-4">Distribution des Whales</h3>
+            <div className="h-80">
+              <Doughnut
+                data={{
+                  labels: ['Accumulating', 'Distributing', 'Idle'],
+                  datasets: [{
+                    data: [
+                      data.whales_accumulating,
+                      data.whales_distributing,
+                      data.whales_idle
+                    ],
+                    backgroundColor: [
+                      '#00ff88',
+                      '#ff4444',
+                      '#8b92b0'
+                    ]
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: {
+                      position: 'bottom'
+                    }
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Total Balance Line Chart */}
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-bold mb-4">Total Whale Balance (24h)</h3>
+            <div className="h-80">
+              <Line
+                data={{
+                  labels: data.history_24h?.map((h: any) => `${h.hour}h`) || [],
+                  datasets: [{
+                    label: 'Total Balance (Millions)',
+                    data: data.history_24h?.map((h: any) => h.total_balance_millions) || [],
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2
+                  }]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                    y: {
+                      beginAtZero: false
+                    }
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Whales Accumulating vs Distributing */}
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <h3 className="text-xl font-bold mb-4">Whales Accumulating vs Distributing (24h)</h3>
+            <div className="h-80">
+              <Line
+                data={{
+                  labels: data.history_24h?.map((h: any) => `${h.hour}h`) || [],
+                  datasets: [
+                    {
+                      label: 'Accumulating',
+                      data: data.history_24h?.map((h: any) => h.whales_accumulating) || [],
+                      borderColor: '#00ff88',
+                      backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                      fill: true,
+                      tension: 0.4,
+                      borderWidth: 2
+                    },
+                    {
+                      label: 'Distributing',
+                      data: data.history_24h?.map((h: any) => h.whales_distributing) || [],
+                      borderColor: '#ff4444',
+                      backgroundColor: 'rgba(255, 68, 68, 0.1)',
+                      fill: true,
+                      tension: 0.4,
+                      borderWidth: 2
+                    }
+                  ]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      max: 12
+                    }
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const renderAgentContent = () => {
     const agentData = getAgentData()
 
@@ -393,6 +685,11 @@ function App() {
     // Agent 1: Emotional Network
     if (activeButton === 1) {
       return renderEmotionalNetwork(agentData.data)
+    }
+
+    // Agent 2: Whale Behavior
+    if (activeButton === 2) {
+      return renderWhaleBehavior(agentData.data)
     }
 
     // Pour les autres agents, afficher temporairement le JSON
